@@ -1,0 +1,25 @@
+version: '3'
+services:
+  job_service:
+    container_name: job_service
+    image: job_service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - bridge
+  postgres:
+    container_name: job_db
+    image: postgres
+    environment:
+      POSTGRES_USER: 'root'
+      POSTGRES_PASSWORD: 'example'
+      POSTGRES_DB: 'job_db'
+    ports:
+     - "5432:5432"
+    networks:
+      - bridge
+networks:
+  bridge:
+    driver: bridge
