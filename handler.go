@@ -3,8 +3,6 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
-	// "fmt"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -23,11 +21,6 @@ type Body struct {
 	DataJson interface{}  `json:"data_json"`
 }
 
-// Body{
-// 	custom_id string
-// 	kind string
-// 	data_json json
-// }
 func InitializeDb() (Database, error) {
 	db := Database{}
 	// dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
@@ -35,16 +28,13 @@ func InitializeDb() (Database, error) {
 	url := "postgresql://root:example@postgres/job_db?sslmode=disable"
 	conn, err := sql.Open("postgres", url)
 	if err != nil {
-			log.Println(err.Error())
 			return db, err
 	}
 	db.Conn = conn
 	err = db.Conn.Ping()
 	if err != nil {
-			log.Println(err.Error())
 			return db, err
 	}
-	log.Println("Database connection established")
 	return db, nil
 }
 
@@ -55,17 +45,17 @@ func (handler *Handler) AddJobToQueue(ctx *gin.Context) {
 		ctx.JSON(403,map[string]string{"error": err.Error()})
 		return
 	}
+
 	var id int
 	var createdAt string
 	query := `INSERT INTO jobs (custom_id, kind, data_json) VALUES ($1, $2, $3) RETURNING id, created_at`
-	// str := fmt.Sprintf("%v",body.DataJson)
-	// raw := json.RawMessage(str)
 	b, err := json.Marshal(body.DataJson)
 	if err != nil {
 		ctx.JSON(403,map[string]string{"error": err.Error()})
 		return
 	}
-	err = handler.Db.Conn.QueryRow(query, body.CustomId, body.Kind, b).Scan(&id, &createdAt)
+	m := json.RawMessage(b)
+	err = handler.Db.Conn.QueryRow(query, body.CustomId, body.Kind, m).Scan(&id, &createdAt)
 	if err != nil {
 			ctx.JSON(403,map[string]string{"error": err.Error()})
 			return
